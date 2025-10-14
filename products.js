@@ -21,6 +21,7 @@ const showFormBtn = document.getElementById("showAdminFormBtn");
 const adminFormContainer = document.getElementById("adminFormContainer");
 
 if (role === "admin") {
+
   showFormBtn.style.display = "inline-block";
   showFormBtn.addEventListener("click", () => {
     adminFormContainer.style.display =
@@ -93,6 +94,40 @@ async function fetchProducts() {
       `;
 
       if (role === "admin") {
+       const editBtn = document.createElement("button");
+  editBtn.textContent = "Edit";
+  editBtn.addEventListener("click", () => {
+    const newName = prompt("Enter new product name:", productName);
+    const newDesc = prompt("Enter new description:", productDescription);
+    const newPrice = prompt("Enter new price:", productPrice);
+    const newQty = prompt("Enter quantity:", productDoc.fields.quantity?.integerValue || 1);
+
+    if (newName && newDesc && newPrice !== null && newQty !== null) {
+      axios.patch(
+        `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/shoppingProducts/${productId}?updateMask.fieldPaths=name&updateMask.fieldPaths=description&updateMask.fieldPaths=price&updateMask.fieldPaths=quantity`,
+        {
+          fields: {
+            name: { stringValue: newName },
+            description: { stringValue: newDesc },
+            price: { integerValue: parseInt(newPrice) },
+            quantity: { integerValue: parseInt(newQty) },
+          },
+        },
+        { headers: { Authorization: `Bearer ${idToken}` } }
+      )
+      .then(() => {
+        alert("Product updated successfully!");
+        fetchProducts(); 
+      })
+      .catch(err => {
+        console.error("Error updating product:", err.response?.data || err);
+        alert("Failed to update product.");
+      });
+    }
+  });
+
+  productBox.appendChild(editBtn);
+ 
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Delete";
         deleteBtn.addEventListener("click", async () => {

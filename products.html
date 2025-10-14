@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Products</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -28,6 +29,26 @@
 
   <h3>Available Products</h3>
 <div id="productsContainer"></div>
+<div id="cartModal" class="cart-modal" style="display: none;">
+  <div class="cart-content">
+    <span id="closeCart" class="close-cart">&times;</span>
+    <h2>Your Cart</h2>
+    <div id="cartItemsContainer"></div>
+    <p id="totalAmount"><strong>Total:</strong> ₹0</p>
+
+    <label for="paymentMethod"><strong>Payment Method:</strong></label>
+    <select id="paymentMethod">
+      <option value="upi">UPI</option>
+      <option value="card">Card</option>
+      <option value="cod">Cash on Delivery</option>
+    </select>
+
+    <button id="applyCouponBtn">Apply Coupon (First Order)</button>
+    <button id="placeOrderBtn">Place Order</button>
+  </div>
+</div>
+<div id="productsContainer"></div>
+<div id="paginationContainer" class="pagination"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
    <script src="firebaseConfig.js"></script>

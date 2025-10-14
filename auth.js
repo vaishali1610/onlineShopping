@@ -24,7 +24,6 @@ async function handleRedirectAuth() {
     if (!accessToken) return;
 
     try {
-      // Exchange Google token for Firebase ID token
       const res = await axios.post(
         `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${FIREBASE_CONFIG.API_KEY}`,
         {
@@ -39,12 +38,11 @@ async function handleRedirectAuth() {
       const email = data.email;
       const name = data.displayName;
 
-      // Store basic session info
       sessionStorage.setItem("idToken", data.idToken);
       sessionStorage.setItem("displayName", name);
       sessionStorage.setItem("email", email);
 
-      let role = "user"; // default role
+      let role = "user"; 
 
       try {
         const userRes = await axios.get(
@@ -82,7 +80,6 @@ async function handleRedirectAuth() {
   }
 }
 
-// ---------------- Helper to make Firestore-safe doc ID ----------------
 function encodeEmail(email) {
   return email.replace(/\./g, "_").replace(/@/g, "_");
 }

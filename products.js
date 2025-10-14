@@ -17,17 +17,24 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
+const showFormBtn = document.getElementById("showAdminFormBtn");
+const adminFormContainer = document.getElementById("adminFormContainer");
+
 if (role === "admin") {
-  document.getElementById("adminFormContainer").style.display = "block";
+  showFormBtn.style.display = "inline-block";
+  showFormBtn.addEventListener("click", () => {
+    adminFormContainer.style.display =
+      adminFormContainer.style.display === "none" ? "block" : "none";
+  });
 
   const adminForm = document.getElementById("adminProductForm");
-
   adminForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const name = document.getElementById("productName").value;
     const description = document.getElementById("productDescription").value;
     const price = document.getElementById("productPrice").value;
+    const quantity = document.getElementById("productQuantity").value;
 
     try {
       await axios.post(
@@ -37,6 +44,7 @@ if (role === "admin") {
             name: { stringValue: name },
             description: { stringValue: description },
             price: { integerValue: parseInt(price) },
+            quantity: { integerValue: parseInt(quantity) },
           },
         },
         { headers: { Authorization: `Bearer ${idToken}` } }
@@ -72,6 +80,7 @@ async function fetchProducts() {
       const productDescription = fields.description?.stringValue || "";
       const productPrice =
         fields.price?.integerValue || fields.price?.doubleValue || "N/A";
+      const productQty = fields.quantity?.integerValue || 1;
 
       const productBox = document.createElement("div");
       productBox.classList.add("product-box");
@@ -80,6 +89,7 @@ async function fetchProducts() {
         <h3>${productName}</h3>
         <p>${productDescription}</p>
         <p>Price: ₹${productPrice}</p>
+        <p>Available: ${productQty}</p>
       `;
 
       if (role === "admin") {
@@ -99,6 +109,8 @@ async function fetchProducts() {
           }
         });
         productBox.appendChild(deleteBtn);
+
+        
       } else {
         const addToCartBtn = document.createElement("button");
         addToCartBtn.textContent = "Add to Cart";
@@ -134,11 +146,7 @@ async function addToCart(productId, productName, productPrice) {
 
     await axios.patch(
       `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/shoppingProducts/${productId}?updateMask.fieldPaths=quantity`,
-      {
-        fields: {
-          quantity: { integerValue: availableQty - 1 },
-        },
-      },
+      { fields: { quantity: { integerValue: availableQty - 1 } } },
       { headers: { Authorization: `Bearer ${idToken}` } }
     );
 
@@ -172,18 +180,25 @@ async function addToCart(productId, productName, productPrice) {
 
     await axios.patch(
       `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/users/${safeUserId}?updateMask.fieldPaths=cart`,
-      {
-        fields: { cart: { arrayValue: { values: currentItems } } },
-      },
+      { fields: { cart: { arrayValue: { values: currentItems } } } },
       { headers: { Authorization: `Bearer ${idToken}` } }
     );
 
     alert(`${productName} added to cart!`);
-    fetchProducts(); // refresh product list to show updated quantity
+    fetchProducts(); 
   } catch (err) {
     console.error("Error adding to cart:", err.response?.data || err);
     alert("Failed to add product to cart.");
   }
 }
+
+const searchInput = document.getElementById("searchInput");
+searchInput.addEventListener("input", () => {
+  const searchTerm = searchInput.value.toLowerCase();
+  document.querySelectorAll(".product-box").forEach((box) => {
+    const productName = box.querySelector("h3").textContent.toLowerCase();
+    box.style.display = productName.includes(searchTerm) ? "block" : "none";
+  });
+});
 
 fetchProducts();

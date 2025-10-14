@@ -39,9 +39,25 @@ async function handleRedirectAuth() {
       );
 
       const data = res.data;
-      localStorage.setItem("idToken", data.idToken);
-      localStorage.setItem("displayName", data.displayName);
-      localStorage.setItem("email", data.email);
+      sessionStorage.setItem("idToken", data.idToken);
+      sessionStorage.setItem("displayName", data.displayName);
+      sessionStorage.setItem("email", data.email);
+
+      let role = "user"; 
+      try {
+        const roleRes = await axios.get(
+          `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/roles/${data.email}`,
+          {
+            headers: { Authorization: `Bearer ${data.idToken}` },
+          }
+        );
+
+        role = roleRes.data.fields?.role?.stringValue || "user";
+      } catch (err) {
+        console.warn("No role found, defaulting to user");
+      }
+
+      sessionStorage.setItem("role", role);
 
       window.location.href = "products.html";
     } catch (err) {

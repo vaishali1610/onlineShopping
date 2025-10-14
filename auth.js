@@ -1,12 +1,9 @@
-
-
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginBtn");
   if (loginBtn) loginBtn.addEventListener("click", startGoogleLogin);
 
   handleRedirectAuth();
 });
-
 
 function startGoogleLogin() {
   const oauthUrl =
@@ -20,7 +17,6 @@ function startGoogleLogin() {
   window.location.href = oauthUrl;
 }
 
-
 async function handleRedirectAuth() {
   if (window.location.hash.includes("access_token")) {
     const params = new URLSearchParams(window.location.hash.substring(1));
@@ -28,6 +24,7 @@ async function handleRedirectAuth() {
     if (!accessToken) return;
 
     try {
+      // Exchange Google token for Firebase ID token
       const res = await axios.post(
         `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${FIREBASE_CONFIG.API_KEY}`,
         {
@@ -39,30 +36,53 @@ async function handleRedirectAuth() {
       );
 
       const data = res.data;
-      sessionStorage.setItem("idToken", data.idToken);
-      sessionStorage.setItem("displayName", data.displayName);
-      sessionStorage.setItem("email", data.email);
+      const email = data.email;
+      const name = data.displayName;
 
-      let role = "user"; 
+      // Store basic session info
+      sessionStorage.setItem("idToken", data.idToken);
+      sessionStorage.setItem("displayName", name);
+      sessionStorage.setItem("email", email);
+
+      let role = "user"; // default role
+
       try {
-        const roleRes = await axios.get(
-          `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/roles/${data.email}`,
-          {
-            headers: { Authorization: `Bearer ${data.idToken}` },
-          }
+        const userRes = await axios.get(
+          `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/users/${encodeEmail(email)}`,
+          { headers: { Authorization: `Bearer ${data.idToken}` } }
         );
 
-        role = roleRes.data.fields?.role?.stringValue || "user";
+        role = userRes.data.fields.role?.stringValue || "user";
       } catch (err) {
-        console.warn("No role found, defaulting to user");
+        if (err.response?.status === 404) {
+          await axios.post(
+            `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/users?documentId=${encodeEmail(email)}`,
+            {
+              fields: {
+                name: { stringValue: name },
+                email: { stringValue: email },
+                role: { stringValue: "user" },
+                cart: { arrayValue: { values: [] } }
+              }
+            },
+            { headers: { Authorization: `Bearer ${data.idToken}` } }
+          );
+        } else {
+          console.error("Error fetching user:", err.response?.data || err);
+        }
       }
 
       sessionStorage.setItem("role", role);
-
       window.location.href = "products.html";
+
     } catch (err) {
       console.error("Auth Error:", err.response?.data || err);
       alert("Authentication failed. Please try again.");
     }
   }
+}
+
+// ---------------- Helper to make Firestore-safe doc ID ----------------
+function encodeEmail(email) {
+  return email.replace(/\./g, "_").replace(/@/g, "_");
 }

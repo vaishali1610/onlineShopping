@@ -75,7 +75,12 @@ async function handleRedirectAuth() {
 
     } catch (err) {
       console.error("Auth Error:", err.response?.data || err);
-      alert("Authentication failed. Please try again.");
+        Swal.fire({
+  toast: true, position: 'top-end', icon: 'error',
+  title: 'Sign in failed', showConfirmButton: false,
+  timer: 2000,
+  timerProgressBar: false,
+});
     }
   }
 }

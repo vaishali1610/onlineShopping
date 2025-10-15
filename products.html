@@ -6,12 +6,18 @@
   <title>Products</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
  <link rel="stylesheet" href="styles.css">
+ <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   <h2>Welcome to Products Page</h2>
   <div id="userInfo"></div>
   <button id="logoutBtn">Logout</button>
   <hr />
+  <label for="categoryFilter">Filter by Category:</label>
+<select id="categoryFilter">
+  <option value="all">All</option>
+</select>
+
 <button id="showAdminFormBtn" style="display:none; margin-bottom: 15px;">Add Product</button>
 
 <input type="text" id="searchInput" placeholder="Search products..." style="width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #ccc;">
@@ -23,6 +29,7 @@
     <textarea id="productDescription" placeholder="Description" required></textarea><br><br>
     <input type="number" id="productPrice" placeholder="Price" required /><br><br>
     <input type="number" id="productQuantity" placeholder="Quantity" required /><br><br>
+    <input type="text" id="productCategory" placeholder="Product category" required /><br><br>
     <button type="submit">Add Product</button>
   </form>
 </div>

@@ -190,7 +190,13 @@ body {
   margin-top: 10px;
 }
 
-
+ select, input { padding: 5px; margin: 5px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #4CAF50; color: white; }
+    button { padding: 6px 12px; margin: 5px; cursor: pointer; border-radius: 5px; border: none; background-color: #4CAF50; color: white; }
+    button:hover { background-color: #45a049; }
+    .section { background-color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0px 0px 5px rgba(0,0,0,0.1); }
 .quantity-control button {
   border: none;
   border-radius: 8px;
@@ -241,5 +247,25 @@ body {
   cursor: not-allowed;
   transform: none;
 }
+  #categoryFilter {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    background-color: #f8f8f8;
+    color: #333;
+    transition: all 0.3s ease;
+    outline: none;
+    cursor: pointer;
+  }
 
+  #categoryFilter:hover {
+    border-color: #888;
+    background-color: #f0f0f0;
+  }
+
+  #categoryFilter:focus {
+    border-color: #5a9;
+    box-shadow: 0 0 5px rgba(90, 160, 90, 0.5);
+  }
 

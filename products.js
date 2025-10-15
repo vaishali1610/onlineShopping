@@ -30,7 +30,23 @@ if (role === "admin") {
     adminFormContainer.style.display =
       adminFormContainer.style.display === "none" ? "block" : "none";
   });
+  const dashboardBtn = document.createElement("button");
+  dashboardBtn.textContent = "Go to Dashboard";
+  dashboardBtn.style.marginLeft = "10px";
+  dashboardBtn.style.padding = "8px 12px";
+  dashboardBtn.style.backgroundColor = "#4CAF50";
+  dashboardBtn.style.color = "#fff";
+  dashboardBtn.addEventListener("mouseover", () => {
+      dashboardBtn.style.backgroundColor = "#45a049";
+  });
+  dashboardBtn.addEventListener("mouseout", () => {
+      dashboardBtn.style.backgroundColor = "#4CAF50";
+  });
+  dashboardBtn.addEventListener("click", () => {
+      window.location.href = "dashboard.html";
+  });
 
+  showFormBtn.parentNode.insertBefore(dashboardBtn, showFormBtn.nextSibling);
   const adminForm = document.getElementById("adminProductForm");
   adminForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -140,7 +156,7 @@ function renderProducts() {
       });
 
       const editBtn = document.createElement("button");
-      editBtn.textContent = "Edit";
+      editBtn.innerHTML = `<i class="fa-solid fa-pencil"></i> Edit`;
       editBtn.addEventListener("click", () => {
         openEditForm(productId, productName, productDescription, productPrice, productQty);
       });
@@ -260,6 +276,7 @@ function displayFilteredProducts(filteredProducts) {
       <p>Available: ${productQty}</p>
       <p>Category: ${productCategory}</p>
     `;
+
 
     if (role === "admin") {
       const deleteBtn = document.createElement("button");
@@ -483,34 +500,97 @@ async function openCartModal() {
     );
 
     const userDoc = userRes.data;
-    const cartItems = userDoc.fields.cart?.arrayValue?.values || [];
+    let cartItems = userDoc.fields.cart?.arrayValue?.values || [];
 
     if (cartItems.length === 0) {
       cartContainer.innerHTML = "<p>Your cart is empty.</p>";
       totalAmountEl.innerHTML = `<strong>Total:</strong> ₹0`;
     } else {
-      cartItems.forEach((item) => {
-        const data = item.mapValue.fields;
-        const name = data.name.stringValue;
-        const price = parseInt(data.price.integerValue);
-        const qty = parseInt(data.quantity.integerValue);
-        const subtotal = price * qty;
-        total += subtotal;
+      // Function to render cart items dynamically
+      const renderCart = () => {
+        cartContainer.innerHTML = "";
+        total = 0;
 
-        const div = document.createElement("div");
-        div.classList.add("cart-item");
-        div.innerHTML = `
-          <p><strong>${name}</strong></p>
-          <p>Qty: ${qty}</p>
-          <p>Price: ₹${price}</p>
-          <p>Subtotal: ₹${subtotal}</p>
-          <hr>
-        `;
-        cartContainer.appendChild(div);
-      });
+        cartItems.forEach((item, index) => {
+          const data = item.mapValue.fields;
+          const name = data.name.stringValue;
+          const price = parseInt(data.price.integerValue);
+          const qty = parseInt(data.quantity.integerValue);
+          const subtotal = price * qty;
+          total += subtotal;
 
-      totalAmountEl.innerHTML = `<strong>Total:</strong> ₹${total}`;
+          const div = document.createElement("div");
+          div.classList.add("cart-item");
+          div.innerHTML = `
+            <p><strong>${name}</strong></p>
+            <p>Qty: ${qty}</p>
+            <p>Price: ₹${price}</p>
+            <p>Subtotal: ₹${subtotal}</p>
+          `;
+
+          // ❌ Remove Button
+          const removeBtn = document.createElement("button");
+          removeBtn.textContent = "Remove";
+          removeBtn.style.background = "#e74c3c";
+          removeBtn.style.color = "white";
+          removeBtn.style.border = "none";
+          removeBtn.style.borderRadius = "5px";
+          removeBtn.style.padding = "5px 8px";
+          removeBtn.style.cursor = "pointer";
+          removeBtn.onclick = async () => {
+            try {
+              // Remove the selected item locally
+              cartItems.splice(index, 1);
+
+              // Update Firestore
+              await axios.patch(
+                `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/users/${safeUserId}?updateMask.fieldPaths=cart`,
+                {
+                  fields: {
+                    cart: {
+                      arrayValue: {
+                        values: cartItems,
+                      },
+                    },
+                  },
+                },
+                { headers: { Authorization: `Bearer ${idToken}` } }
+              );
+
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Item removed from cart",
+                showConfirmButton: false,
+                timer: 1500,
+              });
+
+              renderCart(); // re-render cart after removal
+            } catch (err) {
+              console.error("Error removing item:", err);
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: "Failed to remove item",
+                showConfirmButton: false,
+                timer: 1500,
+              });
+            }
+          };
+
+          div.appendChild(removeBtn);
+          div.appendChild(document.createElement("hr"));
+          cartContainer.appendChild(div);
+        });
+
+        totalAmountEl.innerHTML = `<strong>Total:</strong> ₹${total}`;
+      };
+
+      renderCart();
     }
+
     cartModal.style.display = "flex";
     document.getElementById("closeCart").onclick = () => {
       cartModal.style.display = "none";
@@ -519,52 +599,61 @@ async function openCartModal() {
       if (e.target === cartModal) cartModal.style.display = "none";
     };
 
- document.getElementById("applyCouponBtn").onclick = async () => {
-  try {
-    const ordersRes = await axios.get(
-      `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/orders`,
-      { headers: { Authorization: `Bearer ${idToken}` } }
-    );
+    // 🏷 Coupon Code logic
+    document.getElementById("applyCouponBtn").onclick = async () => {
+      try {
+        const ordersRes = await axios.get(
+          `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/orders`,
+          { headers: { Authorization: `Bearer ${idToken}` } }
+        );
 
-    const orders = ordersRes.data.documents || [];
-    const userOrders = orders.filter(
-      (o) =>
-        o.fields &&
-        o.fields.email &&
-        o.fields.email.stringValue === email
-    );
+        const orders = ordersRes.data.documents || [];
+        const userOrders = orders.filter(
+          (o) =>
+            o.fields &&
+            o.fields.email &&
+            o.fields.email.stringValue === email
+        );
 
-    if (userOrders.length === 0) {
-      total = Math.round(total * 0.9); 
-      totalAmountEl.innerHTML = `<strong>Total (after 10% off):</strong> ₹${total}`;
-       Swal.fire({
-  toast: true, position: 'top-end', icon: 'success',
-  title: 'Coupon applied! 10% off on your first order', showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: false,
-});
-    } else {
-        Swal.fire({
-  toast: true, position: 'top-end', icon: 'error',
-  title: 'Coupon not applicable', showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: false,
-});
-    }
-  } catch (err) {
-    console.error("Error checking orders:", err.response?.data || err);
-  }
-};
+        if (userOrders.length === 0) {
+          total = Math.round(total * 0.9);
+          totalAmountEl.innerHTML = `<strong>Total (after 10% off):</strong> ₹${total}`;
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Coupon applied! 10% off on your first order",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        } else {
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Coupon not applicable",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
+      } catch (err) {
+        console.error("Error checking orders:", err.response?.data || err);
+      }
+    };
+
+    // 🛍 Place order logic
     document.getElementById("placeOrderBtn").onclick = async () => {
       const paymentMethod = document.getElementById("paymentMethod").value;
 
       if (cartItems.length === 0) {
-         Swal.fire({
-  toast: true, position: 'top-end', icon: 'info',
-  title: 'Cart is empty!', showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: false,
-});
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "info",
+          title: "Cart is empty!",
+          showConfirmButton: false,
+          timer: 2000,
+        });
         return;
       }
 
@@ -585,13 +674,16 @@ async function openCartModal() {
         );
 
         Swal.fire({
-  toast: true, position: 'top-end', icon: 'success',
-  title: 'Order placed!', showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: false,
-});
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Order placed!",
+          showConfirmButton: false,
+          timer: 2000,
+        });
         cartModal.style.display = "none";
 
+        // Empty cart in Firestore
         await axios.patch(
           `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/users/${safeUserId}?updateMask.fieldPaths=cart`,
           { fields: { cart: { arrayValue: {} } } },
@@ -602,11 +694,13 @@ async function openCartModal() {
       } catch (err) {
         console.error("Error placing order:", err.response?.data || err);
         Swal.fire({
-  toast: true, position: 'top-end', icon: 'error',
-  title: 'Failed to place order', showConfirmButton: false,
-  timer: 2000,
-  timerProgressBar: false,
-});
+          toast: true,
+          position: "top-end",
+          icon: "error",
+          title: "Failed to place order",
+          showConfirmButton: false,
+          timer: 2000,
+        });
       }
     };
   } catch (err) {

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <h1>Admin Dashboard</h1>
+  <button id="backBtn"><i class="fa-solid fa-arrow-left"></i> Back to Products</button>
+
+  <div class="section" id="customerReports">
+    <h2>Customer Reports</h2>
+    <button id="customerAllBtn">All Customers</button>
+    <button id="customerTop10Btn">Top 10 Customers</button>
+    <div id="customerTableContainer"></div>
+  </div>
+
+  <div class="section" id="inventoryReports">
+    <h2>Inventory Reports</h2>
+    <button id="currentStockBtn">Current Stock - All</button>
+    <button id="categoryStockBtn">Category Wise</button>
+    <button id="highLowStockBtn">High/Low Stock</button>
+    <div id="inventoryTableContainer"></div>
+  </div>
+
+  <div class="section" id="salesReports">
+    <h2>Sales Reports</h2>
+    <button id="allSalesBtn">All Sales</button>
+    <div id="salesTableContainer"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

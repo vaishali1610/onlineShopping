@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("loginBtn");
   if (loginBtn) loginBtn.addEventListener("click", startGoogleLogin);

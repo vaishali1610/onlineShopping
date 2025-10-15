@@ -56,6 +56,7 @@ if (role === "admin") {
     const price = document.getElementById("productPrice").value;
     const quantity = document.getElementById("productQuantity").value;
  const category = document.getElementById("productCategory").value;
+ const img = document.getElementById("productImg").value
     try {
       await axios.post(
         `https://firestore.googleapis.com/v1/projects/onlineshopping-be882/databases/(default)/documents/shoppingProducts`,
@@ -65,12 +66,13 @@ if (role === "admin") {
             description: { stringValue: description },
             price: { integerValue: parseInt(price) },
             quantity: { integerValue: parseInt(quantity) },
-            category : {stringValue: category}
+            category : {stringValue: category},
+            imgUrl: {stringValue: img}
           },
         },
         { headers: { Authorization: `Bearer ${idToken}` } }
       );
-Swal.fire({ toast: true, position: 'top-center', icon: 'success',
+Swal.fire({ toast: true, position: 'top-end', icon: 'success',
   title: 'Item added to cart!', showConfirmButton: false, timer: 2000,
   timerProgressBar: false,
 });
@@ -126,7 +128,7 @@ function renderProducts() {
     const productDescription = fields.description?.stringValue || "";
     const productPrice = fields.price?.integerValue || fields.price?.doubleValue || "N/A";
     const productQty = fields.quantity?.integerValue || 0;
-
+    const img = fields.imgUrl?.stringValue || ""
     const productBox = document.createElement("div");
     productBox.classList.add("product-box");
 
@@ -136,6 +138,7 @@ function renderProducts() {
       <p>Price: ₹${productPrice}</p>
       <p>Available: ${productQty}</p>
       <p>Category: ${productCategory}</p>
+        <img src="${img}" alt="${productName}" class="product-image" />
     `;
 
     if (role === "admin") {
@@ -265,7 +268,7 @@ function displayFilteredProducts(filteredProducts) {
     const productDescription = fields.description?.stringValue || "";
     const productPrice = fields.price?.integerValue || fields.price?.doubleValue || "N/A";
     const productQty = fields.quantity?.integerValue || 0;
-
+    const img = fields.imgUrl?.stringValue || ""
     const productBox = document.createElement("div");
     productBox.classList.add("product-box");
 
@@ -275,6 +278,7 @@ function displayFilteredProducts(filteredProducts) {
       <p>Price: ₹${productPrice}</p>
       <p>Available: ${productQty}</p>
       <p>Category: ${productCategory}</p>
+        <img src="${img}" alt="${productName}" class="product-image" />
     `;
 
 
@@ -377,7 +381,7 @@ function displayProductsWithPagination() {
     const productPrice =
       fields.price?.integerValue || fields.price?.doubleValue || "N/A";
     const productQty = fields.quantity?.integerValue || 0;
-
+const img =fields.imgUrl?.stringValue
     const productBox = document.createElement("div");
     productBox.classList.add("product-box");
 
@@ -387,6 +391,7 @@ function displayProductsWithPagination() {
       <p>Price: ₹${productPrice}</p>
       <p>Available: ${productQty}</p>
       <p>Category: ${productCategory}</p>
+        <img src="${img}" alt="${productName}" class="product-image" />
     `;
 
     if (role !== "admin") {
@@ -528,7 +533,7 @@ async function openCartModal() {
             <p>Subtotal: ₹${subtotal}</p>
           `;
 
-          // ❌ Remove Button
+
           const removeBtn = document.createElement("button");
           removeBtn.textContent = "Remove";
           removeBtn.style.background = "#e74c3c";
